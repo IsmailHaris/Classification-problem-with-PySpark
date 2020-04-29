@@ -47,7 +47,8 @@ EXPLORATORY DATA ANALYSIS
 -----------------------------------------------------------------------------
 -"""
 
-#The Iris dataset is multivariate meaning there is more than one independent variable. So we will carry out a basic multivariate EDA on it. 
+#The Iris dataset is multivariate meaning there is more than one independent variable. 
+#So we will carry out a basic multivariate EDA on it. 
 
 #Description of iris dataset statistics
 print ("Description du dataset")
@@ -92,12 +93,15 @@ DATA PROCESSING PIPELINE DEFINITION
 """
 
 """--------------------------------------------------------------------------------
-Spark Pipeline is a sequence of stages (Transformer, Estimator) : String indexer toconvert categorical data to numerics, standard scaler, vector assembler to put features in a dense vector, PCA features reduction, label one hot encoding. 
+Spark Pipeline is a sequence of stages (Transformer, Estimator) : String indexer to
+convert categorical data to numerics, standard scaler, vector assembler to put 
+features in a dense vector, PCA features reduction, label one hot encoding. 
 -----------------------------------------------------------------------------------
 """
 from pyspark.ml import Pipeline
 
 """ STRING INDEXER (Estimator) """ 
+
 print("String Indexer")
 #Add a numeric indexer for the label/target column 
 stringIndexer = StringIndexer(inputCol="variety", outputCol="label")
@@ -109,6 +113,7 @@ irisNormDf.select("variety", "label").distinct().collect()
 
 
 """Vector Assembler (Transformer)"""
+
 print ("Vector Assembler")
 #Transform to a DataFrame for input to Machine Learning. 
 from pyspark.ml.feature import VectorAssembler
@@ -128,6 +133,7 @@ irisLpDf = assembler.transform(irisNormDf)
 #irisLpDf.printSchema()
 
 """Explore the Correlation between features""" 
+
 print ("Correlation matrices")
 from pyspark.ml.stat import Correlation
 #linear correlation
@@ -138,7 +144,10 @@ r2 = Correlation.corr(irisLpDf,"features","spearman").head()
 print("Spearman correlation matrix\n"+str(r2[0]))
 
 """Standard Scaler(Estimator) """
-print("\n".join(["Les features sont tres correles entre eux sauf sepal width qui n'a pas l'air d'etre correle avec les autres. +80% de correlation entre tous les autres, moins de 50% entre sepal width et les autres features (sepal length, petal length et petal width)"," "," "," "," ","Standard Scaler"]))
+
+print("\n".join(["Les features sont tres correles entre eux sauf sepal width qui n'a pas\
+l'air d'etre correle avec les autres. +80% de correlation entre tous les autres, moins de \
+50% entre sepal width et les autres features (sepal length, petal length et petal width)"," "," "," "," ","Standard Scaler"]))
 #We will use the StandardScaler to normalize each feature to have unit standard deviation and 0 mean. 
 
 from pyspark.mllib.util import MLUtils
@@ -151,6 +160,7 @@ irisNormalizedDf.printSchema()
 
 
 """ Label OneHotEncoder (Estimator \ the Transformer is now deprecated)"""
+
 print("One Hot Encoder")
 from pyspark.ml.feature import OneHotEncoder
 encoder = OneHotEncoder(dropLast = False,  inputCol = "label", outputCol = "encoded_label")
@@ -160,6 +170,7 @@ irisNormalizedencodedDf.printSchema()
 
 
 """ PCA Principal Component Analysis"""
+
 print ("PCA Analysis")
 from pyspark.ml.feature import PCA
 pca = PCA(k = 3, inputCol = "scaled_features", outputCol = "pcaFeatures")
@@ -171,6 +182,7 @@ print ("PCA model explained variance", pca_model.explainedVariance,"Cumulative e
 
 
 """ Define the final DataFrame : apply the pipeline"""
+
 print ("\n".join([" "," ","Data processing Pipeline"]))
 pipeline = Pipeline(stages = [stringIndexer, assembler, scaler, encoder, pca])
 (train,test) = iris_df.randomSplit([0.85,0.15])
@@ -209,7 +221,10 @@ dtParamGrid = ParamGridBuilder()\
         .addGrid(DecisionTreeClassifier.maxDepth,[5,10,20,50,100])\
         .build()
 
-dtCrossval = CrossValidator(estimator = DecisionTreeClassifier(impurity ="gini", labelCol="label",featuresCol="pcaFeatures"), estimatorParamMaps = dtParamGrid, evaluator=MulticlassClassificationEvaluator(predictionCol="prediction", labelCol="label",metricName="accuracy"), numFolds = 5)
+dtCrossval = CrossValidator(estimator = DecisionTreeClassifier(impurity ="gini", labelCol="label",featuresCol="pcaFeatures"),
+                            estimatorParamMaps = dtParamGrid, 
+                            evaluator=MulticlassClassificationEvaluator(predictionCol="prediction", labelCol="label",metricName="accuracy"), 
+                            numFolds = 5)
 
 #create the model
 #dtClassifier = DecisionTreeClassifier(maxDepth=4, labelCol="label",featuresCol="pcaFeatures")
@@ -274,9 +289,11 @@ print (evaluator.evaluate(rfpredictions))
 #Draw a confusion matrix
 print("Random Forest Confustion Matrix")
 rfpredictions.groupBy("label","prediction").count().show()
+
 """-------------------------------------------------------------------------------------------------"""
 
 """Gradient Boosted tree classifier"""
+
 print("Gradient Boosted Tree Classifier")
 #from pyspark.ml.classification import GBTClassifier
 #We will use cross validation to find the optimal hyperparameters
@@ -316,6 +333,7 @@ print ("THE PROBLEM WITH GRADIENT BOOSTED TREE CLASSIFIER IS THAT FOR NOW THE sp
 
 
 """-------------------------------------------------------------------------------------------------"""
+
 """MULTILAYER PERCEPTRON MLP CLASSIFIER """
 
 from pyspark.ml.classification import MultilayerPerceptronClassifier
@@ -328,7 +346,8 @@ from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
 #        .build()
 layers = [3,20,20,3]
 #mlpCrossval = CrossValidator(estimator=MultilayerPerceptronClassifier(layers=layers,labelCol="label",featuresCol="pcaFeatures", solver = "l-bfgs", seed = 1234), estimatorParamMaps = mlpParamGrid, evaluator=MulticlassClassificationEvaluator(predictionCol="prediction", labelCol="label",metricName="accuracy"), numFolds = 5)
-mlp = MultilayerPerceptronClassifier(blockSize = 10, layers = layers,labelCol="label",featuresCol="pcaFeatures", solver = "l-bfgs")
+mlp = MultilayerPerceptronClassifier(blockSize = 10, layers = layers,labelCol="label",
+                                     featuresCol="pcaFeatures", solver = "l-bfgs", seed = 1234)
 #create the model
 import time
 mlp_start = time.time()
@@ -394,6 +413,7 @@ lrpredictions.groupBy("label","prediction").count().show()
 """-------------------------------------------------------------------------------------------------"""
 
 """SVM CLASSIFIER"""
+
 print("SVM Classifier")
 """
 from pyspark.ml.classification import LinearSVC
