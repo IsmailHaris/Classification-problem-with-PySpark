@@ -1,4 +1,4 @@
-# Classification-problem-with-PySpark
+# Classification problem with PySpark
 
 Classification of Iris Dataset using PySpark
 
