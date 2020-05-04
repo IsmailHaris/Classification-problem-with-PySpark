@@ -1,3 +1,5 @@
+# command ./bin/spark-submit file path
+#path /home/hduser/local/spark
 import pyspark
 from pyspark import SparkContext
 from pyspark.sql import Row
